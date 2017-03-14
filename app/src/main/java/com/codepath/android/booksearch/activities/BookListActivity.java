@@ -2,6 +2,7 @@ package com.codepath.android.booksearch.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -102,16 +103,16 @@ public class BookListActivity extends AppCompatActivity {
         });
     }
 
-//    @Override
-//    public boolean onPrepareOptionsMenu(Menu menu) {
-//
-//        //ProgressBar bar = (ProgressBar) MenuItemCompat.getActionView(actionProgress);
-//
-//        getMenuInflater().inflate(R.menu.menu_progress_bar, menu);
-//        actionProgress = menu.findItem(R.id.miActionProgress);
-//        bar = (ProgressBar) MenuItemCompat.getActionView(actionProgress);
-//        return super.onPrepareOptionsMenu(menu);
-//    }
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        //ProgressBar bar = (ProgressBar) MenuItemCompat.getActionView(actionProgress);
+
+        getMenuInflater().inflate(R.menu.menu_progress_bar, menu);
+        actionProgress = menu.findItem(R.id.miActionProgress);
+        progressBar = (ProgressBar) MenuItemCompat.getActionView(actionProgress);
+        return super.onPrepareOptionsMenu(menu);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
