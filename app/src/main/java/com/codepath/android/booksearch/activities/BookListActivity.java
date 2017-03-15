@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,6 +36,8 @@ public class BookListActivity extends AppCompatActivity {
     private BookClient client;
     private MenuItem actionProgress;
     private ProgressBar progressBar;
+    private ShareActionProvider miShareAction;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,6 +120,11 @@ public class BookListActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_share, menu);
+//        MenuItem item = menu.findItem(R.id.menu_item_share);
+//        // Fetch reference to the share action provider
+//        miShareAction = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
         getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem searchItem = (MenuItem) findViewById(R.id.action_search);
         final SearchView searchView = (SearchView)menu.findItem(R.id.action_search).getActionView();

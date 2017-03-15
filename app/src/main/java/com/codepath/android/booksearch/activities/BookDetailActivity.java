@@ -1,23 +1,40 @@
 package com.codepath.android.booksearch.activities;
 
+import android.Manifest;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.codepath.android.booksearch.R;
 import com.codepath.android.booksearch.models.Book;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.RuntimePermissions;
+
+@RuntimePermissions
 public class BookDetailActivity extends AppCompatActivity {
     private ImageView ivBookCover;
     private TextView tvTitle;
     private TextView tvAuthor;
     private TextView tvPublishDate;
     private Toolbar toolbar;
+    private Intent shareIntent;
+    private ShareActionProvider miShareAction;
+    private MenuItem shareItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,57 +58,59 @@ public class BookDetailActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(book.getTitle());
 
 
-        Picasso.with(this).load(Uri.parse(book.getCoverUrl())).placeholder(R.drawable.ic_nocover).into(ivBookCover);
-        // Use book object to populate data into views
+        Picasso.with(this).load(Uri.parse(book.getCoverUrl())).placeholder(R.drawable.ic_nocover).into(ivBookCover, new Callback() {
+            @Override
+            public void onSuccess() {
+                BookDetailActivityPermissionsDispatcher.prepareShareIntentWithCheck(BookDetailActivity.this);
+                attachShareIntentAction();
+            }
+
+            @Override
+            public void onError() {
+
+            }
+        });
     }
 
+    @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    public void prepareShareIntent() {
+        // Fetch Bitmap Uri locally
+        ImageView ivImage = (ImageView) findViewById(R.id.ivBookCover);
+        Drawable mDrawable = ivImage.getDrawable();
+        Bitmap mBitmap = ((BitmapDrawable)mDrawable).getBitmap();
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_book_detail, menu);
-//        return true;
-//    }
+        String path = MediaStore.Images.Media.insertImage(getContentResolver(),
+                mBitmap, "Image Description", null);
+
+        Uri uri = Uri.parse(path);
+        shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.setType("image/*");
+    }
+
+    // Attaches the share intent to the share menu item provider
+    public void attachShareIntentAction() {
+        if (miShareAction != null && shareIntent != null)
+            miShareAction.setShareIntent(shareIntent);
+    }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        getMenuInflater().inflate(R.menu.menu_share, menu);
+        shareItem = menu.findItem(R.id.menu_item_share);
+        miShareAction = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
+        attachShareIntentAction();
 
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_search, menu);
-//        MenuItem searchItem = (MenuItem) findViewById(R.id.action_search);
-//        //final SearchView searchView = (SearchView) searchItem.getActionView();
-//        final SearchView searchView = (SearchView)menu.findItem(R.id.action_search).getActionView();
-//
-//        //searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-//
-//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                searchView.clearFocus();
-//                String keyword = searchView.getQuery().toString();
-//                //fetchBooks(keyword);
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                return false;
-//            }
-//        });
-//        return super.onCreateOptionsMenu(menu);
-//    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // NOTE: delegate the permission handling to generated method
+        BookDetailActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
+    }
 }
