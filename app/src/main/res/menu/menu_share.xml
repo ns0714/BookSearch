@@ -7,5 +7,4 @@
         app:showAsAction="ifRoom"
         android:title="Share"
         app:actionProviderClass="android.support.v7.widget.ShareActionProvider" />
-    ...
 </menu>

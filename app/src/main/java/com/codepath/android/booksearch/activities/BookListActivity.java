@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,8 +35,6 @@ public class BookListActivity extends AppCompatActivity {
     private BookClient client;
     private MenuItem actionProgress;
     private ProgressBar progressBar;
-    private ShareActionProvider miShareAction;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +55,7 @@ public class BookListActivity extends AppCompatActivity {
         lvBooks.addFooterView(footer);
 
         lvBooks.setAdapter(bookAdapter);
-
+        fetchBooks("Oscar Wilde");
         lvBooks.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -67,8 +64,6 @@ public class BookListActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        // Fetch the data remotely
-        //fetchBooks("Oscar Wilde");
     }
 
     // Executes an API call to the OpenLibrary search endpoint, parses the results
@@ -108,9 +103,6 @@ public class BookListActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-
-        //ProgressBar bar = (ProgressBar) MenuItemCompat.getActionView(actionProgress);
-
         getMenuInflater().inflate(R.menu.menu_progress_bar, menu);
         actionProgress = menu.findItem(R.id.miActionProgress);
         progressBar = (ProgressBar) MenuItemCompat.getActionView(actionProgress);
@@ -119,12 +111,6 @@ public class BookListActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_share, menu);
-//        MenuItem item = menu.findItem(R.id.menu_item_share);
-//        // Fetch reference to the share action provider
-//        miShareAction = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
-
         getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem searchItem = (MenuItem) findViewById(R.id.action_search);
         final SearchView searchView = (SearchView)menu.findItem(R.id.action_search).getActionView();

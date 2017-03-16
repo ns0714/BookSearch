@@ -3,6 +3,7 @@ package com.codepath.android.booksearch.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,14 +15,14 @@ public class Book implements Parcelable {
     private String openLibraryId;
     private String author;
     private String title;
-    private String publishDate;
+    private String pages;
 
-    public String getPublishDate() {
-        return publishDate;
+    public String getPages() {
+        return pages;
     }
 
-    public void setPublishDate(String publisDate) {
-        this.publishDate = publisDate;
+    public void setPages(String pages) {
+        this.pages = pages;
     }
 
     public String getOpenLibraryId() {
@@ -46,7 +47,7 @@ public class Book implements Parcelable {
         parcel.writeString(openLibraryId);
         parcel.writeString(author);
         parcel.writeString(title);
-        parcel.writeString(publishDate);
+        parcel.writeString(pages);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class Book implements Parcelable {
         openLibraryId = in.readString();
         author = in.readString();
         title = in.readString();
-        publishDate = in.readString();
+        pages = in.readString();
     }
 
     public Book() {
@@ -86,6 +87,7 @@ public class Book implements Parcelable {
 
     // Returns a Book given the expected JSON
     public static Book fromJson(JSONObject jsonObject) {
+        Log.d("JSON", jsonObject.toString());
         Book book = new Book();
         try {
             // Deserialize json into object fields
@@ -98,7 +100,7 @@ public class Book implements Parcelable {
             }
             book.title = jsonObject.has("title_suggest") ? jsonObject.getString("title_suggest") : "";
             book.author = getAuthor(jsonObject);
-            book.publishDate = jsonObject.has("publish_date") ? jsonObject.getString("publish_date") : "";
+            book.pages = jsonObject.has("number_of_pages") ? jsonObject.getString("number_of_pages") : "";
         } catch (JSONException e) {
             e.printStackTrace();
             return null;

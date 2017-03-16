@@ -7,7 +7,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.os.Environment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
@@ -22,18 +22,20 @@ import com.codepath.android.booksearch.models.Book;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
-import permissions.dispatcher.NeedsPermission;
-import permissions.dispatcher.RuntimePermissions;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
-@RuntimePermissions
+import permissions.dispatcher.NeedsPermission;
+
 public class BookDetailActivity extends AppCompatActivity {
     private ImageView ivBookCover;
     private TextView tvTitle;
     private TextView tvAuthor;
-    private TextView tvPublishDate;
+    private TextView tvNumPages;
     private Toolbar toolbar;
     private Intent shareIntent;
-    private ShareActionProvider miShareAction;
+    private ShareActionProvider shareAction;
     private MenuItem shareItem;
 
     @Override
@@ -45,14 +47,14 @@ public class BookDetailActivity extends AppCompatActivity {
         ivBookCover = (ImageView) findViewById(R.id.ivBookCover);
         tvTitle = (TextView) findViewById(R.id.tvTitle);
         tvAuthor = (TextView) findViewById(R.id.tvAuthor);
-        tvPublishDate = (TextView) findViewById(R.id.tvPublishDate);
+        tvNumPages = (TextView) findViewById(R.id.tvNumPages);
 
         // Extract book object from intent extras
         Book book = (Book) getIntent().getParcelableExtra("book");
 
         tvTitle.setText(book.getTitle());
         tvAuthor.setText(book.getAuthor());
-        tvPublishDate.setText(book.getPublishDate());
+        tvNumPages.setText(book.getPages());
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(book.getTitle());
@@ -61,7 +63,7 @@ public class BookDetailActivity extends AppCompatActivity {
         Picasso.with(this).load(Uri.parse(book.getCoverUrl())).placeholder(R.drawable.ic_nocover).into(ivBookCover, new Callback() {
             @Override
             public void onSuccess() {
-                BookDetailActivityPermissionsDispatcher.prepareShareIntentWithCheck(BookDetailActivity.this);
+                prepareShareIntent();
                 attachShareIntentAction();
             }
 
@@ -74,25 +76,19 @@ public class BookDetailActivity extends AppCompatActivity {
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public void prepareShareIntent() {
-        // Fetch Bitmap Uri locally
-        ImageView ivImage = (ImageView) findViewById(R.id.ivBookCover);
-        Drawable mDrawable = ivImage.getDrawable();
-        Bitmap mBitmap = ((BitmapDrawable)mDrawable).getBitmap();
-
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(),
-                mBitmap, "Image Description", null);
-
-        Uri uri = Uri.parse(path);
+        Uri bmpUri = getLocalBitmapUri(ivBookCover); // see previous remote images section
+        // Construct share intent as described above based on bitmap
         shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+        //shareIntent.putExtra(Intent.EXTRA_TEXT, book.getTitle());
         shareIntent.setType("image/*");
     }
 
     // Attaches the share intent to the share menu item provider
     public void attachShareIntentAction() {
-        if (miShareAction != null && shareIntent != null)
-            miShareAction.setShareIntent(shareIntent);
+        if (shareAction != null && shareIntent != null)
+            shareAction.setShareIntent(shareIntent);
     }
 
     @Override
@@ -101,16 +97,35 @@ public class BookDetailActivity extends AppCompatActivity {
 
         getMenuInflater().inflate(R.menu.menu_share, menu);
         shareItem = menu.findItem(R.id.menu_item_share);
-        miShareAction = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
+        shareAction = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
         attachShareIntentAction();
 
         return true;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // NOTE: delegate the permission handling to generated method
-        BookDetailActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
+    public Uri getLocalBitmapUri(ImageView imageView) {
+        // Extract Bitmap from ImageView drawable
+        Drawable drawable = imageView.getDrawable();
+        Bitmap bmp = null;
+        if (drawable instanceof BitmapDrawable){
+            bmp = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+        } else {
+            return null;
+        }
+        // Store image to default external storage directory
+        Uri bmpUri = null;
+        try {
+            // Use methods on Context to access package-specific directories on external storage.
+            // This way, you don't need to request external read/write permission.
+            // See https://youtu.be/5xVh-7ywKpE?t=25m25s
+            File file =  new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "share_image_" + System.currentTimeMillis() + ".png");
+            FileOutputStream out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.close();
+            bmpUri = Uri.fromFile(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bmpUri;
     }
 }

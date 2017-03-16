@@ -6,8 +6,8 @@
 
     <ImageView
         android:id="@+id/ivBookCover"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_margin="8dp" />
 
     <TextView
@@ -17,7 +17,7 @@
         android:layout_margin="8dp"
         android:layout_toRightOf="@+id/ivBookCover"
         android:text="Title"
-        android:textSize="24sp" />
+        android:textSize="20sp" />
 
     <TextView
         android:id="@+id/tvAuthor"
